@@ -1,10 +1,13 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
-import { Outlet } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 
-const Layout = () => {
+interface LayoutProps {
+  children: ReactNode;
+}
+
+const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="flex min-h-screen w-full">
       <Sidebar />
@@ -33,7 +36,7 @@ const Layout = () => {
           </div>
         </header>
         <main className="flex-1 p-6 bg-gray-50 overflow-auto">
-          <Outlet />
+          {children}
         </main>
         <footer className="border-t p-4 bg-white">
           <div className="flex items-center gap-2">
