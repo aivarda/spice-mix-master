@@ -177,11 +177,17 @@ const StockPurchasesPage = () => {
     e.preventDefault();
     
     try {
+      // Calculate the total_amount manually
+      const total_amount = formState.quantity * formState.unit_price;
+      
       if (isEditing && currentPurchaseId) {
         // Update existing stock purchase
         const { error } = await supabase
           .from('stock_purchases')
-          .update(formState)
+          .update({
+            ...formState,
+            total_amount // Add the calculated total_amount
+          })
           .eq('id', currentPurchaseId);
 
         if (error) throw error;
@@ -194,7 +200,10 @@ const StockPurchasesPage = () => {
         // Add new stock purchase
         const { error } = await supabase
           .from('stock_purchases')
-          .insert([formState]);
+          .insert([{
+            ...formState,
+            total_amount // Add the calculated total_amount
+          }]);
 
         if (error) throw error;
         
