@@ -223,15 +223,16 @@ const TaskManagementPage = () => {
   };
 
   const setupDefaultProcesses = async () => {
+    // Fix: Explicitly type the default processes with the literal type
     const defaultProcesses = [
-      { name: 'Cleaning', type: 'pre-production' },
-      { name: 'C & D', type: 'pre-production' },
-      { name: 'Seeds C & D', type: 'pre-production' },
-      { name: 'Roasting', type: 'pre-production' },
-      { name: 'RFP', type: 'pre-production' },
-      { name: 'Sample', type: 'pre-production' },
-      { name: 'Grinding', type: 'production' },
-      { name: 'Packing', type: 'production' }
+      { name: 'Cleaning', type: 'pre-production' as const },
+      { name: 'C & D', type: 'pre-production' as const },
+      { name: 'Seeds C & D', type: 'pre-production' as const },
+      { name: 'Roasting', type: 'pre-production' as const },
+      { name: 'RFP', type: 'pre-production' as const },
+      { name: 'Sample', type: 'pre-production' as const },
+      { name: 'Grinding', type: 'production' as const },
+      { name: 'Packing', type: 'production' as const }
     ];
 
     try {
