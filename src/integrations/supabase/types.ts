@@ -59,6 +59,30 @@ export type Database = {
           },
         ]
       }
+      processes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       production_batches: {
         Row: {
           batch_id: string
@@ -506,7 +530,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      recalculate_stock_status: {
+        Args: {
+          month_param: string
+          year_param: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

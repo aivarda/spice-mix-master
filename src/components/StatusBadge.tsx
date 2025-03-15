@@ -24,13 +24,13 @@ const StatusBadge = ({ status, label }: StatusBadgeProps) => {
   const getBadgeStyles = () => {
     switch (status) {
       case 'normal':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 border border-green-200';
       case 'low':
-        return 'bg-amber-100 text-amber-800';
+        return 'bg-amber-100 text-amber-800 border border-amber-200';
       case 'out':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
   };
 

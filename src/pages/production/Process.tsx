@@ -43,8 +43,8 @@ const ProductionProcessPage = () => {
         const preProduction = data.filter(process => process.type === 'pre-production');
         const production = data.filter(process => process.type === 'production');
         
-        setPreProdProcesses(preProduction);
-        setProdProcesses(production);
+        setPreProdProcesses(preProduction as Process[]);
+        setProdProcesses(production as Process[]);
       }
     } catch (error: any) {
       toast({
@@ -84,10 +84,11 @@ const ProductionProcessPage = () => {
       });
 
       if (data && data[0]) {
+        const newProcessData = data[0] as unknown as Process;
         if (processType === 'pre-production') {
-          setPreProdProcesses([...preProdProcesses, data[0]]);
+          setPreProdProcesses([...preProdProcesses, newProcessData]);
         } else {
-          setProdProcesses([...prodProcesses, data[0]]);
+          setProdProcesses([...prodProcesses, newProcessData]);
         }
       }
 
