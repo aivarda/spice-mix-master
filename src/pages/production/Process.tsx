@@ -100,6 +100,8 @@ const ProductionProcessPage = () => {
 
   const handleEditClick = (process: Process) => {
     setEditingProcess(process);
+    setNewProcess(process.name);
+    setProcessType(process.type);
   };
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,10 +115,11 @@ const ProductionProcessPage = () => {
 
   const handleCancelEdit = () => {
     setEditingProcess(null);
+    setNewProcess("");
   };
 
   const handleSaveEdit = async () => {
-    if (!editingProcess || !editingProcess.name.trim()) {
+    if (!editingProcess || !newProcess.trim()) {
       toast({
         title: "Input required",
         description: "Process name cannot be empty",
@@ -128,7 +131,7 @@ const ProductionProcessPage = () => {
     try {
       const { error } = await supabase
         .from('processes')
-        .update({ name: editingProcess.name.trim() })
+        .update({ name: newProcess.trim() })
         .eq('id', editingProcess.id);
 
       if (error) throw error;
@@ -140,15 +143,16 @@ const ProductionProcessPage = () => {
 
       if (editingProcess.type === 'pre-production') {
         setPreProdProcesses(preProdProcesses.map(process => 
-          process.id === editingProcess.id ? editingProcess : process
+          process.id === editingProcess.id ? { ...process, name: newProcess.trim() } : process
         ));
       } else {
         setProdProcesses(prodProcesses.map(process => 
-          process.id === editingProcess.id ? editingProcess : process
+          process.id === editingProcess.id ? { ...process, name: newProcess.trim() } : process
         ));
       }
 
       setEditingProcess(null);
+      setNewProcess("");
     } catch (error: any) {
       toast({
         title: "Error updating process",

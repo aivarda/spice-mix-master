@@ -3,12 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProcessList from './ProcessList';
 import ProcessForm from './ProcessForm';
-
-type Process = {
-  id: string;
-  name: string;
-  type: 'pre-production' | 'production';
-};
+import { Process } from './process-utils';
 
 type ProcessCardProps = {
   title: string;
@@ -45,30 +40,28 @@ const ProcessCard = ({
 }: ProcessCardProps) => {
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <ProcessList
-            processes={processes}
-            loading={loading}
-            processType={processType}
-            editingProcess={editingProcess}
-            onEditClick={onEditClick}
-            onEditChange={onEditChange}
-            onSaveEdit={onSaveEdit}
-            onCancelEdit={onCancelEdit}
-            onDeleteProcess={onDeleteProcess}
-          />
-        </div>
-
+      <CardContent>
+        <ProcessList
+          processes={processes}
+          loading={loading}
+          processType={processType}
+          editingProcess={editingProcess}
+          onEditClick={onEditClick}
+          onEditChange={onEditChange}
+          onDeleteProcess={onDeleteProcess}
+        />
         <ProcessForm
           newProcess={newProcess}
           processType={processType}
           currentFormType={currentFormType}
           onProcessNameChange={onProcessNameChange}
           onAddProcess={onAddProcess}
+          editingProcess={editingProcess && editingProcess.type === processType ? editingProcess : null}
+          onCancelEdit={onCancelEdit}
+          onSaveEdit={onSaveEdit}
         />
       </CardContent>
     </Card>
