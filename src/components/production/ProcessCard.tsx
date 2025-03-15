@@ -52,6 +52,8 @@ const ProcessCard = ({
           onEditClick={onEditClick}
           onEditChange={onEditChange}
           onDeleteProcess={onDeleteProcess}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
         />
         <ProcessForm
           newProcess={newProcess}
