@@ -21,8 +21,21 @@ const StatusBadge = ({ status, label }: StatusBadgeProps) => {
     }
   };
 
+  const getBadgeStyles = () => {
+    switch (status) {
+      case 'normal':
+        return 'bg-green-100 text-green-800';
+      case 'low':
+        return 'bg-amber-100 text-amber-800';
+      case 'out':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <span className={`status-badge status-${status}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBadgeStyles()}`}>
       {getLabel()}
     </span>
   );
