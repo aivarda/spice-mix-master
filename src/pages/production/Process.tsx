@@ -1,19 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit, X, Save, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-
-type Process = {
-  id: string;
-  name: string;
-  type: 'pre-production' | 'production';
-};
+import ProcessCard from '@/components/production/ProcessCard';
+import { Process, DEFAULT_PROCESSES } from '@/components/production/process-utils';
 
 const ProductionProcessPage = () => {
   const [preProdProcesses, setPreProdProcesses] = useState<Process[]>([]);
@@ -31,7 +23,6 @@ const ProductionProcessPage = () => {
   const fetchProcesses = async () => {
     setLoading(true);
     try {
-      // Fetch processes from the database
       const { data, error } = await supabase
         .from('processes')
         .select('*')
@@ -100,6 +91,11 @@ const ProductionProcessPage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleProcessNameChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'pre-production' | 'production') => {
+    setNewProcess(e.target.value);
+    setProcessType(type);
   };
 
   const handleEditClick = (process: Process) => {
@@ -190,19 +186,14 @@ const ProductionProcessPage = () => {
     }
   };
 
-  const defaultProcesses = {
-    'pre-production': ['Cleaning', 'C & D', 'Seeds C & D', 'Roasting', 'RFP', 'Sample'],
-    'production': ['Grinding', 'Packing']
-  };
-
   const setupDefaultProcesses = async () => {
     try {
-      const preProdInserts = defaultProcesses['pre-production'].map(name => ({
+      const preProdInserts = DEFAULT_PROCESSES['pre-production'].map(name => ({
         name,
         type: 'pre-production' as const
       }));
       
-      const prodInserts = defaultProcesses['production'].map(name => ({
+      const prodInserts = DEFAULT_PROCESSES['production'].map(name => ({
         name,
         type: 'production' as const
       }));
@@ -256,152 +247,40 @@ const ProductionProcessPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Pre-Production Processes */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Pre-Production Processes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                {loading ? (
-                  <p>Loading processes...</p>
-                ) : preProdProcesses.length === 0 ? (
-                  <div className="flex items-center gap-2 text-yellow-600">
-                    <AlertCircle className="h-4 w-4" />
-                    <p>No pre-production processes defined yet.</p>
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {preProdProcesses.map((process) => (
-                      <li key={process.id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded border">
-                        {editingProcess && editingProcess.id === process.id ? (
-                          <div className="flex items-center gap-2 w-full">
-                            <Input 
-                              value={editingProcess.name}
-                              onChange={handleEditChange}
-                              className="flex-1"
-                            />
-                            <Button variant="outline" size="icon" onClick={handleSaveEdit}>
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" onClick={handleCancelEdit}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <span>{process.name}</span>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => handleEditClick(process)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteProcess(process.id, 'pre-production')}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className="pt-4 border-t">
-                <div className="flex items-end gap-2">
-                  <div className="flex-1">
-                    <Label htmlFor="new-pre-prod-process">New Pre-Production Process</Label>
-                    <Input
-                      id="new-pre-prod-process"
-                      value={newProcess}
-                      onChange={(e) => {
-                        setNewProcess(e.target.value);
-                        setProcessType('pre-production');
-                      }}
-                      placeholder="Enter process name"
-                    />
-                  </div>
-                  <Button onClick={handleAddProcess} disabled={!newProcess.trim() || processType !== 'pre-production'}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProcessCard
+            title="Pre-Production Processes"
+            processes={preProdProcesses}
+            loading={loading}
+            processType="pre-production"
+            newProcess={newProcess}
+            currentFormType={processType}
+            editingProcess={editingProcess}
+            onEditClick={handleEditClick}
+            onEditChange={handleEditChange}
+            onSaveEdit={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
+            onDeleteProcess={handleDeleteProcess}
+            onProcessNameChange={handleProcessNameChange}
+            onAddProcess={handleAddProcess}
+          />
 
           {/* Production Processes */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Production Processes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                {loading ? (
-                  <p>Loading processes...</p>
-                ) : prodProcesses.length === 0 ? (
-                  <div className="flex items-center gap-2 text-yellow-600">
-                    <AlertCircle className="h-4 w-4" />
-                    <p>No production processes defined yet.</p>
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {prodProcesses.map((process) => (
-                      <li key={process.id} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded border">
-                        {editingProcess && editingProcess.id === process.id ? (
-                          <div className="flex items-center gap-2 w-full">
-                            <Input 
-                              value={editingProcess.name}
-                              onChange={handleEditChange}
-                              className="flex-1"
-                            />
-                            <Button variant="outline" size="icon" onClick={handleSaveEdit}>
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" onClick={handleCancelEdit}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <span>{process.name}</span>
-                            <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => handleEditClick(process)}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteProcess(process.id, 'production')}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <div className="pt-4 border-t">
-                <div className="flex items-end gap-2">
-                  <div className="flex-1">
-                    <Label htmlFor="new-prod-process">New Production Process</Label>
-                    <Input
-                      id="new-prod-process"
-                      value={newProcess}
-                      onChange={(e) => {
-                        setNewProcess(e.target.value);
-                        setProcessType('production');
-                      }}
-                      placeholder="Enter process name"
-                    />
-                  </div>
-                  <Button onClick={handleAddProcess} disabled={!newProcess.trim() || processType !== 'production'}>
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ProcessCard
+            title="Production Processes"
+            processes={prodProcesses}
+            loading={loading}
+            processType="production"
+            newProcess={newProcess}
+            currentFormType={processType}
+            editingProcess={editingProcess}
+            onEditClick={handleEditClick}
+            onEditChange={handleEditChange}
+            onSaveEdit={handleSaveEdit}
+            onCancelEdit={handleCancelEdit}
+            onDeleteProcess={handleDeleteProcess}
+            onProcessNameChange={handleProcessNameChange}
+            onAddProcess={handleAddProcess}
+          />
         </div>
       </div>
     </Layout>
