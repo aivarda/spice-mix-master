@@ -224,8 +224,11 @@ const Dashboard = () => {
                       salesData.map((sale) => (
                         <tr key={sale.id} className="border-b hover:bg-gray-50">
                           <td className="py-3 px-4">{new Date(sale.date).toLocaleDateString()}</td>
-                          <td className="py-3 px-4">{sale.products?.name} ({sale.products?.sku})</td>
-                          <td className="py-3 px-4">{sale.sales_channels?.name}</td>
+                          <td className="py-3 px-4">
+                            {sale.products?.name || 'Unknown'} 
+                            {sale.products?.sku ? `(${sale.products.sku})` : ''}
+                          </td>
+                          <td className="py-3 px-4">{sale.sales_channels?.name || 'Unknown'}</td>
                           <td className="py-3 px-4">{sale.quantity}</td>
                           <td className="py-3 px-4 text-right">₹ {sale.total_amount.toLocaleString()}</td>
                         </tr>
