@@ -391,15 +391,15 @@ const StockStatusPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-xl font-bold text-green-600">{stockStatus.filter(s => s.status === 'normal').length}</div>
+            <div className="text-xl font-bold text-green-600">{normalCount}</div>
             <div className="text-gray-600">Normal Stock Items</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-xl font-bold text-amber-600">{stockStatus.filter(s => s.status === 'low').length}</div>
+            <div className="text-xl font-bold text-amber-600">{lowCount}</div>
             <div className="text-gray-600">Low Stock Items</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-xl font-bold text-red-600">{stockStatus.filter(s => s.status === 'out').length}</div>
+            <div className="text-xl font-bold text-red-600">{outCount}</div>
             <div className="text-gray-600">Out of Stock Items</div>
           </div>
         </div>
