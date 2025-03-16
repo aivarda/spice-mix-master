@@ -17,10 +17,10 @@ interface Sale {
   products?: {
     name: string;
     sku: string;
-  } | null;  // Changed from array to single object, added null
+  } | null;
   sales_channels?: {
     name: string;
-  } | null;  // Changed from array to single object, added null
+  } | null;
 }
 
 interface RawMaterial {
@@ -58,7 +58,7 @@ const Dashboard = () => {
     }
   });
 
-  const { data: salesData, isLoading: salesLoading } = useQuery<Sale[]>({
+  const { data: salesData, isLoading: salesLoading } = useQuery({
     queryKey: ['recent-sales'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -75,11 +75,20 @@ const Dashboard = () => {
         .limit(5);
       
       if (error) throw error;
-      return data as Sale[] || [];
+      
+      // Transform the data to match our Sale interface
+      return (data || []).map(item => ({
+        id: item.id,
+        date: item.date,
+        quantity: item.quantity,
+        total_amount: item.total_amount,
+        products: item.products,
+        sales_channels: item.sales_channels
+      })) as Sale[];
     }
   });
 
-  const { data: lowStockRawMaterials, isLoading: lowStockLoading } = useQuery<RawMaterial[]>({
+  const { data: lowStockRawMaterials, isLoading: lowStockLoading } = useQuery({
     queryKey: ['low-stock-raw-materials'],
     queryFn: async () => {
       const { data, error } = await supabase
