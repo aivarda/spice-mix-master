@@ -8,6 +8,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CircleAlert, PackageCheck, ShoppingCart, TrendingUp, Users, Warehouse } from 'lucide-react';
 import Layout from '@/components/Layout';
 
+// Define types for better type safety
+interface Sale {
+  id: string;
+  date: string;
+  quantity: number;
+  total_amount: number;
+  products?: {
+    name: string;
+    sku: string;
+  };
+  sales_channels?: {
+    name: string;
+  };
+}
+
+interface RawMaterial {
+  id: string;
+  name: string;
+  code: string;
+  current_stock: number;
+  min_stock: number;
+  unit: string;
+}
+
 const Dashboard = () => {
   // Fetch summary data from different tables
   const { data: productData, isLoading: productsLoading } = useQuery({
@@ -34,7 +58,7 @@ const Dashboard = () => {
     }
   });
 
-  const { data: salesData, isLoading: salesLoading } = useQuery({
+  const { data: salesData, isLoading: salesLoading } = useQuery<Sale[]>({
     queryKey: ['recent-sales'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -55,7 +79,7 @@ const Dashboard = () => {
     }
   });
 
-  const { data: lowStockRawMaterials, isLoading: lowStockLoading } = useQuery({
+  const { data: lowStockRawMaterials, isLoading: lowStockLoading } = useQuery<RawMaterial[]>({
     queryKey: ['low-stock-raw-materials'],
     queryFn: async () => {
       const { data, error } = await supabase

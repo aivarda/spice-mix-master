@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { 
@@ -153,7 +152,7 @@ const StockStatusPage = () => {
       // For each raw material, we need to:
       // 1. Get previous month's closing balance (or current_stock if no previous record)
       // 2. Calculate purchases from stock_purchases in current month
-      // 3. Calculate utilized from tasks in current month
+      // 3. Calculate utilized from tasks in current month (only Cleaning process)
       // 4. Calculate closing balance = opening + purchases - utilized + adjustment
       const newStockStatus: StockStatus[] = [];
       const newAdjustments: Record<string, number> = {};
