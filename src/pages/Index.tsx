@@ -17,10 +17,10 @@ interface Sale {
   products?: {
     name: string;
     sku: string;
-  };
+  } | null;  // Changed from array to single object, added null
   sales_channels?: {
     name: string;
-  };
+  } | null;  // Changed from array to single object, added null
 }
 
 interface RawMaterial {
@@ -75,7 +75,7 @@ const Dashboard = () => {
         .limit(5);
       
       if (error) throw error;
-      return data || [];
+      return data as Sale[] || [];
     }
   });
 
@@ -89,7 +89,7 @@ const Dashboard = () => {
         .limit(5);
       
       if (error) throw error;
-      return data || [];
+      return data as RawMaterial[] || [];
     }
   });
 
