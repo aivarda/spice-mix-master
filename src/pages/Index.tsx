@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -82,9 +81,9 @@ const Dashboard = () => {
         date: item.date,
         quantity: item.quantity,
         total_amount: item.total_amount,
-        products: item.products || null,
-        sales_channels: item.sales_channels || null
-      }));
+        products: item.products,
+        sales_channels: item.sales_channels
+      })) as Sale[];
     }
   });
 
