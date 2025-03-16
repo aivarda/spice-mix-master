@@ -172,10 +172,10 @@ const StockStatusPage = () => {
           .eq('raw_material_id', material.id)
           .maybeSingle();
 
-        // Get opening balance
+        // Get opening balance - the closing balance of the previous month
         const openingBalance = prevData ? prevData.closing_balance : material.current_stock;
 
-        // Calculate purchases for current month
+        // Calculate purchases for current month - sum of all purchases for this material in the month
         const startDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth(), 1);
         const endDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth() + 1, 0);
         
@@ -190,12 +190,12 @@ const StockStatusPage = () => {
         
         const purchases = purchasesData?.reduce((sum, item) => sum + Number(item.quantity), 0) || 0;
 
-        // Calculate utilized for current month
+        // Calculate utilized for current month - sum of all cleaning process assignments for this material
         const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
           .select('assigned_qty')
           .eq('raw_material_id', material.id)
-          .eq('process', 'Cleaning')
+          .eq('process', 'Cleaning')  // Only count 'Cleaning' process as per requirements
           .gte('date_assigned', startDate.toISOString().split('T')[0])
           .lte('date_assigned', endDate.toISOString().split('T')[0]);
 
@@ -206,7 +206,7 @@ const StockStatusPage = () => {
         // Use adjustment of 0 initially
         const adjustment = 0;
 
-        // Calculate closing balance
+        // Calculate closing balance = opening + purchases - utilized + adjustment
         const closingBalance = openingBalance + purchases - utilized + adjustment;
 
         // Determine status

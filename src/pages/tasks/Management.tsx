@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { 
@@ -209,7 +208,6 @@ const TaskManagementPage = () => {
       if (error) throw error;
       setProcesses(data || []);
       
-      // If no processes in database, setup defaults
       if (data.length === 0) {
         await setupDefaultProcesses();
       }
@@ -223,7 +221,6 @@ const TaskManagementPage = () => {
   };
 
   const setupDefaultProcesses = async () => {
-    // Fix: Explicitly type the default processes with the literal type
     const defaultProcesses = [
       { name: 'Cleaning', type: 'pre-production' as const },
       { name: 'C & D', type: 'pre-production' as const },
@@ -287,7 +284,6 @@ const TaskManagementPage = () => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
     
-    // Clear validation error when user types
     if (formErrors[name]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -300,7 +296,6 @@ const TaskManagementPage = () => {
   const handleSelectChange = (name: string, value: string) => {
     setFormState(prev => ({ ...prev, [name]: value }));
     
-    // Clear validation error when user selects
     if (formErrors[name]) {
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -314,7 +309,6 @@ const TaskManagementPage = () => {
     if (date) {
       setFormState(prev => ({ ...prev, [field]: format(date, 'yyyy-MM-dd') }));
       
-      // Clear validation error when user selects a date
       if (formErrors[field]) {
         setFormErrors(prev => {
           const newErrors = { ...prev };
@@ -337,7 +331,6 @@ const TaskManagementPage = () => {
     }
     if (!formState.staff_id) errors.staff_id = "Staff member is required";
     
-    // Check if the assigned quantity exceeds available stock for new tasks
     if (!currentTask && formState.raw_material_id && formState.assigned_qty > 0) {
       const selectedMaterial = rawMaterials.find(rm => rm.id === formState.raw_material_id);
       if (selectedMaterial && formState.assigned_qty > selectedMaterial.current_stock) {
@@ -345,7 +338,6 @@ const TaskManagementPage = () => {
       }
     }
     
-    // For editing tasks, only check stock if we're increasing the assigned quantity
     if (currentTask && formState.raw_material_id && formState.assigned_qty > 0) {
       const selectedMaterial = rawMaterials.find(rm => rm.id === formState.raw_material_id);
       if (selectedMaterial && formState.assigned_qty > currentTask.assigned_qty) {
@@ -367,7 +359,6 @@ const TaskManagementPage = () => {
     
     try {
       if (currentTask) {
-        // Update existing task
         const { error } = await supabase
           .from('tasks')
           .update({
@@ -392,7 +383,6 @@ const TaskManagementPage = () => {
         
         setShowEditTaskDialog(false);
       } else {
-        // Create new task
         const { error } = await supabase
           .from('tasks')
           .insert({
@@ -415,10 +405,9 @@ const TaskManagementPage = () => {
         });
         
         setShowNewTaskDialog(false);
-        generateNextTaskId(); // Generate next task ID for future use
+        generateNextTaskId();
       }
       
-      // Reset form state
       setFormState({
         task_id: nextTaskId,
         date_assigned: format(new Date(), 'yyyy-MM-dd'),
@@ -431,10 +420,8 @@ const TaskManagementPage = () => {
         task_description: ''
       });
       
-      // Refresh tasks list
       fetchTasks();
-      fetchRawMaterials(); // Refresh stock levels
-      
+      fetchRawMaterials();
     } catch (error: any) {
       toast({
         title: "Error saving task",
@@ -487,7 +474,6 @@ const TaskManagementPage = () => {
       return;
     }
     
-    // Create CSV content
     const headers = [
       "Task ID", 
       "Date Assigned", 
@@ -515,7 +501,6 @@ const TaskManagementPage = () => {
       ].join(','))
     ].join('\n');
     
-    // Create download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -535,7 +520,6 @@ const TaskManagementPage = () => {
       const content = event.target?.result as string;
       const rows = content.split('\n');
       
-      // Skip headers
       if (rows.length < 2) {
         toast({
           title: "Invalid CSV file",
@@ -546,13 +530,12 @@ const TaskManagementPage = () => {
       }
       
       try {
-        // Process rows but skip header
         const tasksToImport = [];
         const errors = [];
         let successCount = 0;
         
         for (let i = 1; i < rows.length; i++) {
-          if (!rows[i].trim()) continue; // Skip empty rows
+          if (!rows[i].trim()) continue;
           
           const columns = rows[i].split(',');
           
@@ -561,7 +544,6 @@ const TaskManagementPage = () => {
             continue;
           }
           
-          // Map raw material name to ID
           const rawMaterialName = columns[2].trim();
           const rawMaterial = rawMaterials.find(rm => rm.name === rawMaterialName);
           if (!rawMaterial) {
@@ -569,7 +551,6 @@ const TaskManagementPage = () => {
             continue;
           }
           
-          // Map staff name to ID
           const staffName = columns[5].trim();
           const staff = staffList.find(s => s.name === staffName);
           if (!staff) {
@@ -577,7 +558,6 @@ const TaskManagementPage = () => {
             continue;
           }
           
-          // Prepare task data
           const taskData = {
             task_id: columns[0].trim(),
             date_assigned: columns[1].trim(),
@@ -590,16 +570,13 @@ const TaskManagementPage = () => {
             task_description: columns[8] ? columns[8].replace(/^"|"$/g, '').replace(/""/g, '"') : null
           };
           
-          // Validate assigned quantity
           if (isNaN(taskData.assigned_qty) || taskData.assigned_qty <= 0) {
             errors.push(`Row ${i}: Invalid assigned quantity`);
             continue;
           }
           
-          // Validate date format
           try {
             if (taskData.date_assigned) {
-              // Try to parse the date - this will throw if invalid
               parse(taskData.date_assigned, 'yyyy-MM-dd', new Date());
             }
             if (taskData.date_completed) {
@@ -613,7 +590,6 @@ const TaskManagementPage = () => {
           tasksToImport.push(taskData);
         }
         
-        // Insert tasks in database
         if (tasksToImport.length > 0) {
           const { data, error } = await supabase
             .from('tasks')
@@ -623,10 +599,9 @@ const TaskManagementPage = () => {
           if (error) throw error;
           
           successCount = data?.length || 0;
-          fetchTasks(); // Refresh tasks list
+          fetchTasks();
         }
         
-        // Show results
         if (errors.length === 0) {
           toast({
             title: "Import successful",
@@ -649,7 +624,6 @@ const TaskManagementPage = () => {
     };
     
     reader.readAsText(file);
-    // Reset the input value so the same file can be uploaded again
     e.target.value = '';
   };
 
@@ -705,7 +679,6 @@ const TaskManagementPage = () => {
           </div>
         </div>
 
-        {/* Task Table */}
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <Table>
@@ -765,7 +738,6 @@ const TaskManagementPage = () => {
           </CardContent>
         </Card>
 
-        {/* New Task Dialog */}
         <Dialog open={showNewTaskDialog} onOpenChange={setShowNewTaskDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -886,6 +858,52 @@ const TaskManagementPage = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="date_completed">Date Completed</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formState.date_completed ? format(new Date(formState.date_completed), 'MMM dd, yyyy') : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formState.date_completed ? new Date(formState.date_completed) : undefined}
+                        onSelect={(date) => handleDateChange('date_completed', date)}
+                        initialFocus
+                      />
+                      <div className="p-2 border-t border-gray-200">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start text-left text-red-500 hover:text-red-700"
+                          onClick={() => setFormState(prev => ({ ...prev, date_completed: '' }))}
+                        >
+                          <X className="mr-2 h-4 w-4" />
+                          Clear date
+                        </Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wastage_qty">Wastage Quantity</Label>
+                  <Input
+                    id="wastage_qty"
+                    name="wastage_qty"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formState.wastage_qty}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="task_description">Task Description</Label>
                   <Input
                     id="task_description"
@@ -906,7 +924,6 @@ const TaskManagementPage = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Task Dialog */}
         <Dialog open={showEditTaskDialog} onOpenChange={setShowEditTaskDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
