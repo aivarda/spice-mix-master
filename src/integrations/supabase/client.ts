@@ -36,6 +36,56 @@ type ExtendedDatabase = Database & {
           updated_at?: string;
         };
       };
+      production_status: {
+        Row: {
+          id: string;
+          month: string;
+          year: number;
+          process: string;
+          raw_material_id: string;
+          opening_balance: number;
+          assigned: number;
+          completed: number;
+          wastage: number;
+          pending: number;
+          adjustment: number;
+          closing_balance: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          month: string;
+          year: number;
+          process: string;
+          raw_material_id: string;
+          opening_balance?: number;
+          assigned?: number;
+          completed?: number;
+          wastage?: number;
+          pending?: number;
+          adjustment?: number;
+          closing_balance?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          month?: string;
+          year?: number;
+          process?: string;
+          raw_material_id?: string;
+          opening_balance?: number;
+          assigned?: number;
+          completed?: number;
+          wastage?: number;
+          pending?: number;
+          adjustment?: number;
+          closing_balance?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     } & Database['public']['Tables'];
   };
 };

@@ -36,6 +36,7 @@ interface RawMaterial {
   category: string;
   unit: string;
   current_stock: number;
+  min_stock: number;
 }
 
 interface ProductionStatus {
@@ -54,6 +55,7 @@ interface ProductionStatus {
   pending: number;
   adjustment: number;
   closing_balance: number;
+  min_level: number;
 }
 
 const ProductionStatusPage = () => {
@@ -139,7 +141,7 @@ const ProductionStatusPage = () => {
           const comboId = `${material.id}_${process.name}_${month}_${year}`;
           
           // Check if we already have data for this combination
-          const { data: existingData } = await supabase
+          const { data: existingData, error: existingError } = await supabase
             .from('production_status')
             .select('*')
             .eq('month', month)
@@ -148,12 +150,16 @@ const ProductionStatusPage = () => {
             .eq('process', process.name)
             .maybeSingle();
 
+          if (existingError) {
+            console.error("Error fetching existing production status:", existingError);
+          }
+
           // Get previous month's closing balance
           const prevMonth = new Date(year, new Date(`${month} 1, ${year}`).getMonth() - 1, 1);
           const prevMonthString = prevMonth.toLocaleString('default', { month: 'short' });
           const prevYear = prevMonth.getFullYear();
           
-          const { data: prevData } = await supabase
+          const { data: prevData, error: prevError } = await supabase
             .from('production_status')
             .select('closing_balance')
             .eq('month', prevMonthString)
@@ -161,9 +167,13 @@ const ProductionStatusPage = () => {
             .eq('raw_material_id', material.id)
             .eq('process', process.name)
             .maybeSingle();
+            
+          if (prevError) {
+            console.error("Error fetching previous month data:", prevError);
+          }
 
           // Get opening balance - the closing balance of the previous month or 0
-          const openingBalance = prevData?.closing_balance || 0;
+          const openingBalance = (prevData?.closing_balance) || 0;
 
           // Calculate date range for current month
           const startDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth(), 1);
@@ -251,7 +261,8 @@ const ProductionStatusPage = () => {
               wastage: wastageQty,
               pending: pendingQty,
               adjustment,
-              closing_balance: closingBalance
+              closing_balance: closingBalance,
+              min_level: material.min_stock
             });
 
             newAdjustments[existingData.id] = adjustment;
@@ -293,7 +304,8 @@ const ProductionStatusPage = () => {
                 wastage: wastageQty,
                 pending: pendingQty,
                 adjustment: 0,
-                closing_balance: closingBalance
+                closing_balance: closingBalance,
+                min_level: material.min_stock
               });
 
               newAdjustments[insertedData[0].id] = 0;
