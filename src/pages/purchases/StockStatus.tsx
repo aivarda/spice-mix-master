@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { 
@@ -158,11 +159,15 @@ const StockStatusPage = () => {
       const newAdjustments: Record<string, number> = {};
 
       for (const material of rawMaterials) {
-        // Find previous month's record
-        const prevMonth = new Date(year, new Date(`${month} 1, ${year}`).getMonth() - 1, 1);
-        const prevMonthString = prevMonth.toLocaleString('default', { month: 'short' });
-        const prevYear = prevMonth.getFullYear();
+        // Find previous month's record (for Opening Balance)
+        // Get the previous month and year
+        const currentDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth(), 1);
+        const prevDate = new Date(currentDate);
+        prevDate.setMonth(prevDate.getMonth() - 1);
+        const prevMonthString = prevDate.toLocaleString('default', { month: 'short' });
+        const prevYear = prevDate.getFullYear();
         
+        // Query previous month's closing balance
         const { data: prevData } = await supabase
           .from('stock_status')
           .select('closing_balance')
@@ -386,15 +391,15 @@ const StockStatusPage = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-xl font-bold text-green-600">{normalCount}</div>
+            <div className="text-xl font-bold text-green-600">{stockStatus.filter(s => s.status === 'normal').length}</div>
             <div className="text-gray-600">Normal Stock Items</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-xl font-bold text-amber-600">{lowCount}</div>
+            <div className="text-xl font-bold text-amber-600">{stockStatus.filter(s => s.status === 'low').length}</div>
             <div className="text-gray-600">Low Stock Items</div>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-sm">
-            <div className="text-xl font-bold text-red-600">{outCount}</div>
+            <div className="text-xl font-bold text-red-600">{stockStatus.filter(s => s.status === 'out').length}</div>
             <div className="text-gray-600">Out of Stock Items</div>
           </div>
         </div>
@@ -432,52 +437,57 @@ const StockStatusPage = () => {
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-10">Loading...</TableCell>
                 </TableRow>
-              ) : filteredStockStatus.length === 0 ? (
+              ) : stockStatus.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} className="text-center py-10">
                     {searchQuery ? 'No stock items found matching your search.' : 'No stock status data available.'}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredStockStatus.map(status => {
-                  // Calculate real-time closing balance based on current adjustment
-                  const currentAdjustment = adjustments[status.id] || 0;
-                  const calculatedClosingBalance = status.opening_balance + status.purchases - status.utilized + currentAdjustment;
-                  const calculatedStatus = determineStatus(calculatedClosingBalance, status.min_level);
-                  
-                  return (
-                    <TableRow key={status.id}>
-                      <TableCell className="font-medium">{status.raw_material_name}</TableCell>
-                      <TableCell>{status.raw_material_category}</TableCell>
-                      <TableCell>{status.opening_balance} {status.raw_material_unit}</TableCell>
-                      <TableCell>{status.purchases} {status.raw_material_unit}</TableCell>
-                      <TableCell>{status.utilized} {status.raw_material_unit}</TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={adjustments[status.id] || 0}
-                          onChange={(e) => handleAdjustmentChange(status.id, e.target.value)}
-                          className="w-16 text-center"
-                          min="-9999"
-                          step="0.01"
-                        />
-                      </TableCell>
-                      <TableCell>{calculatedClosingBalance.toFixed(2)} {status.raw_material_unit}</TableCell>
-                      <TableCell>{status.min_level} {status.raw_material_unit}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          calculatedStatus === 'normal' ? 'bg-green-100 text-green-800' :
-                          calculatedStatus === 'low' ? 'bg-amber-100 text-amber-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {calculatedStatus === 'normal' ? 'Normal' : 
-                           calculatedStatus === 'low' ? 'Low Stock' : 
-                           'Out of Stock'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                stockStatus
+                  .filter(status => 
+                    status.raw_material_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    status.raw_material_category?.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map(status => {
+                    // Calculate real-time closing balance based on current adjustment
+                    const currentAdjustment = adjustments[status.id] || 0;
+                    const calculatedClosingBalance = status.opening_balance + status.purchases - status.utilized + currentAdjustment;
+                    const calculatedStatus = determineStatus(calculatedClosingBalance, status.min_level);
+                    
+                    return (
+                      <TableRow key={status.id}>
+                        <TableCell className="font-medium">{status.raw_material_name}</TableCell>
+                        <TableCell>{status.raw_material_category}</TableCell>
+                        <TableCell>{status.opening_balance} {status.raw_material_unit}</TableCell>
+                        <TableCell>{status.purchases} {status.raw_material_unit}</TableCell>
+                        <TableCell>{status.utilized} {status.raw_material_unit}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={adjustments[status.id] || 0}
+                            onChange={(e) => handleAdjustmentChange(status.id, e.target.value)}
+                            className="w-16 text-center"
+                            min="-9999"
+                            step="0.01"
+                          />
+                        </TableCell>
+                        <TableCell>{calculatedClosingBalance.toFixed(2)} {status.raw_material_unit}</TableCell>
+                        <TableCell>{status.min_level} {status.raw_material_unit}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            calculatedStatus === 'normal' ? 'bg-green-100 text-green-800' :
+                            calculatedStatus === 'low' ? 'bg-amber-100 text-amber-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {calculatedStatus === 'normal' ? 'Normal' : 
+                            calculatedStatus === 'low' ? 'Low Stock' : 
+                            'Out of Stock'}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
               )}
             </TableBody>
           </Table>

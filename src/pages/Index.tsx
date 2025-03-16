@@ -58,7 +58,7 @@ const Dashboard = () => {
     }
   });
 
-  const { data: salesData, isLoading: salesLoading } = useQuery({
+  const { data: salesData, isLoading: salesLoading } = useQuery<Sale[]>({
     queryKey: ['recent-sales'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,13 +82,13 @@ const Dashboard = () => {
         date: item.date,
         quantity: item.quantity,
         total_amount: item.total_amount,
-        products: item.products,
-        sales_channels: item.sales_channels
-      })) as Sale[];
+        products: item.products || null,
+        sales_channels: item.sales_channels || null
+      }));
     }
   });
 
-  const { data: lowStockRawMaterials, isLoading: lowStockLoading } = useQuery({
+  const { data: lowStockRawMaterials, isLoading: lowStockLoading } = useQuery<RawMaterial[]>({
     queryKey: ['low-stock-raw-materials'],
     queryFn: async () => {
       const { data, error } = await supabase
