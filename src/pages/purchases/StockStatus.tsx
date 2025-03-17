@@ -150,24 +150,27 @@ const StockStatusPage = () => {
   // Generate stock status for a month
   const generateStockStatus = async (month: string, year: number) => {
     try {
-      // For each raw material, we need to:
-      // 1. Get previous month's closing balance (or current_stock if no previous record)
-      // 2. Calculate purchases from stock_purchases in current month
-      // 3. Calculate utilized from tasks in current month (only Cleaning process)
-      // 4. Calculate closing balance = opening + purchases - utilized + adjustment
+      console.log(`Generating stock status for ${month} ${year}`);
       const newStockStatus: StockStatus[] = [];
       const newAdjustments: Record<string, number> = {};
 
       for (const material of rawMaterials) {
-        // Find previous month's record (for Opening Balance)
-        // Get the previous month and year
+        // Calculate dates for current and previous month
         const currentDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth(), 1);
         const prevDate = new Date(currentDate);
         prevDate.setMonth(prevDate.getMonth() - 1);
         const prevMonthString = prevDate.toLocaleString('default', { month: 'short' });
         const prevYear = prevDate.getFullYear();
         
-        // Query previous month's closing balance
+        // Start and end dates for the current month
+        const startDate = new Date(currentDate);
+        const endDate = new Date(year, currentDate.getMonth() + 1, 0); // Last day of current month
+        
+        console.log(`Material: ${material.name}`);
+        console.log(`Current month: ${month} ${year}, dates: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+        console.log(`Previous month: ${prevMonthString} ${prevYear}`);
+        
+        // 1. Get previous month's closing balance (for Opening Balance)
         const { data: prevData } = await supabase
           .from('stock_status')
           .select('closing_balance')
@@ -176,13 +179,11 @@ const StockStatusPage = () => {
           .eq('raw_material_id', material.id)
           .maybeSingle();
 
-        // Get opening balance - the closing balance of the previous month
+        // Get opening balance - use previous month's closing balance or current_stock if no previous data
         const openingBalance = prevData ? prevData.closing_balance : material.current_stock;
+        console.log(`Opening balance: ${openingBalance}`);
 
-        // Calculate purchases for current month - sum of all purchases for this material in the month
-        const startDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth(), 1);
-        const endDate = new Date(year, new Date(`${month} 1, ${year}`).getMonth() + 1, 0);
-        
+        // 2. Calculate purchases for current month - sum of all purchases for this material in the month
         const { data: purchasesData, error: purchasesError } = await supabase
           .from('stock_purchases')
           .select('quantity')
@@ -190,11 +191,16 @@ const StockStatusPage = () => {
           .gte('date', startDate.toISOString().split('T')[0])
           .lte('date', endDate.toISOString().split('T')[0]);
 
-        if (purchasesError) throw purchasesError;
+        if (purchasesError) {
+          console.error('Error fetching purchases:', purchasesError);
+          throw purchasesError;
+        }
         
         const purchases = purchasesData?.reduce((sum, item) => sum + Number(item.quantity), 0) || 0;
+        console.log(`Purchases data:`, purchasesData);
+        console.log(`Total purchases: ${purchases}`);
 
-        // Calculate utilized for current month - sum of all cleaning process assignments for this material
+        // 3. Calculate utilized for current month - sum of cleaning process assignments
         const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
           .select('assigned_qty')
@@ -203,18 +209,25 @@ const StockStatusPage = () => {
           .gte('date_assigned', startDate.toISOString().split('T')[0])
           .lte('date_assigned', endDate.toISOString().split('T')[0]);
 
-        if (tasksError) throw tasksError;
+        if (tasksError) {
+          console.error('Error fetching tasks:', tasksError);
+          throw tasksError;
+        }
         
         const utilized = tasksData?.reduce((sum, item) => sum + Number(item.assigned_qty), 0) || 0;
+        console.log(`Tasks data:`, tasksData);
+        console.log(`Total utilized: ${utilized}`);
 
-        // Use adjustment of 0 initially
+        // 4. Use adjustment of 0 initially
         const adjustment = 0;
 
-        // Calculate closing balance = opening + purchases - utilized + adjustment
+        // 5. Calculate closing balance = opening + purchases - utilized + adjustment
         const closingBalance = openingBalance + purchases - utilized + adjustment;
+        console.log(`Closing balance: ${closingBalance}`);
 
-        // Determine status
+        // 6. Determine status based on min_stock
         const status = determineStatus(closingBalance, material.min_stock);
+        console.log(`Status: ${status}`);
 
         // Create new stock status record
         const newStatus: StockStatus = {
@@ -253,7 +266,10 @@ const StockStatusPage = () => {
           })
           .select();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Error inserting stock status:', insertError);
+          throw insertError;
+        }
 
         if (insertedData && insertedData[0]) {
           // Update id in memory
@@ -265,7 +281,13 @@ const StockStatusPage = () => {
 
       setStockStatus(newStockStatus);
       setAdjustments(newAdjustments);
+      
+      toast({
+        title: "Stock status generated",
+        description: `Successfully generated stock status for ${month} ${year}`,
+      });
     } catch (error: any) {
+      console.error('Error in generateStockStatus:', error);
       toast({
         title: "Error generating stock status",
         description: error.message,
